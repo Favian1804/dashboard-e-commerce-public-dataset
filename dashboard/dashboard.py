@@ -14,24 +14,13 @@ st.markdown("Analisis harga, review, dan customer behavior (RFM)")
 # ==============================
 # LOAD DATA
 # ==============================
-@st.cache_data
-def load_data():
-    orders = pd.read_csv("data_1.csv")
-    order_items = pd.read_csv("data_2.csv")
-    products = pd.read_csv("data_3.csv")
-    reviews = pd.read_csv("data_4.csv")
+import pandas as pd
+import os
 
-    # cleaning ringan
-    order_items = order_items.dropna()
-    reviews = reviews.dropna(subset=['review_score'])
+BASE_DIR = os.path.dirname(__file__)
+csv_path = os.path.join(BASE_DIR, "main_data.csv")
 
-    df = order_items.merge(orders, on="order_id")
-    df = df.merge(products, on="product_id")
-    df = df.merge(reviews, on="order_id")
-
-    return df
-
-data = load_data()
+df = pd.read_csv(csv_path)
 
 # ==============================
 # SIDEBAR FILTER (INTERAKTIF - WAJIB REVIEWER)
