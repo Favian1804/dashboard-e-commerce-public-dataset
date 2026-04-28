@@ -12,12 +12,13 @@ st.title("📊 Dashboard Analisis E-Commerce")
 # ========================
 # LOAD DATA
 # ========================
-@st.cache_data
-def load_data():
-    df = pd.read_csv('main_data.csv')
-    return df
+import pandas as pd
+import os
 
-df = load_data()
+BASE_DIR = os.path.dirname(__file__)
+csv_path = os.path.join(BASE_DIR, "main_data.csv")
+
+df = pd.read_csv(csv_path)
 
 # ========================
 # DATA CLEANING (basic)
