@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
 
 # ==============================
 # CONFIG
@@ -14,13 +15,15 @@ st.markdown("Analisis harga, review, dan customer behavior (RFM)")
 # ==============================
 # LOAD DATA
 # ==============================
-import pandas as pd
-import os
-
 BASE_DIR = os.path.dirname(__file__)
 csv_path = os.path.join(BASE_DIR, "main_data.csv")
 
-df = pd.read_csv(csv_path)
+try:
+    df = pd.read_csv(csv_path)
+except FileNotFoundError:
+    import streamlit as st
+    st.error("File 'main_data.csv' tidak ditemukan. Pastikan file berada di folder yang sama dengan script.")
+    st.stop()
 
 # ==============================
 # SIDEBAR FILTER (INTERAKTIF - WAJIB REVIEWER)
