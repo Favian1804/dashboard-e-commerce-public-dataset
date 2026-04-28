@@ -10,7 +10,7 @@ import os
 st.set_page_config(page_title="E-Commerce Dashboard", layout="wide")
 
 st.title("📊 E-Commerce Data Analysis Dashboard")
-st.markdown("Analisis harga, review, dan customer behavior (RFM)")
+st.markdown("Analisis harga, review, dan customer behavior (RFM sederhana)")
 
 # ==============================
 # LOAD DATA
@@ -18,37 +18,44 @@ st.markdown("Analisis harga, review, dan customer behavior (RFM)")
 BASE_DIR = os.path.dirname(__file__)
 csv_path = os.path.join(BASE_DIR, "main_data.csv")
 
-try:
-    df = pd.read_csv(csv_path)
-except FileNotFoundError:
-    import streamlit as st
-    st.error("File 'main_data.csv' tidak ditemukan. Pastikan file berada di folder yang sama dengan script.")
-    st.stop()
+df = pd.read_csv(csv_path)
 
 # ==============================
-# SIDEBAR FILTER (INTERAKTIF - WAJIB REVIEWER)
+# VALIDASI KOLOM (ANTI ERROR)
+# ==============================
+required_cols = ["product_category_name", "review_score", "price"]
+
+for col in required_cols:
+    if col not in df.columns:
+        st.error(f"Kolom '{col}' tidak ditemukan di dataset!")
+        st.stop()
+
+# ==============================
+# SIDEBAR FILTER
 # ==============================
 st.sidebar.header("🔎 Filter Data")
 
 category = st.sidebar.selectbox(
     "Pilih Kategori Produk",
-    ["All"] + list(data['product_category_name'].dropna().unique())
+    ["All"] + sorted(df["product_category_name"].dropna().unique())
 )
 
 review_filter = st.sidebar.slider(
     "Filter Review Score",
-    1, 5, (1,5)
+    1, 5, (1, 5)
 )
 
-# apply filter
-filtered = data.copy()
+# ==============================
+# APPLY FILTER
+# ==============================
+filtered = df.copy()
 
 if category != "All":
-    filtered = filtered[filtered['product_category_name'] == category]
+    filtered = filtered[filtered["product_category_name"] == category]
 
 filtered = filtered[
-    (filtered['review_score'] >= review_filter[0]) &
-    (filtered['review_score'] <= review_filter[1])
+    (filtered["review_score"] >= review_filter[0]) &
+    (filtered["review_score"] <= review_filter[1])
 ]
 
 # ==============================
@@ -59,13 +66,13 @@ st.subheader("📌 Ringkasan KPI")
 col1, col2, col3 = st.columns(3)
 
 col1.metric("Total Transaksi", len(filtered))
-col2.metric("Rata-rata Harga", round(filtered['price'].mean(),2))
-col3.metric("Rata-rata Review", round(filtered['review_score'].mean(),2))
+col2.metric("Rata-rata Harga", round(filtered["price"].mean(), 2))
+col3.metric("Rata-rata Review", round(filtered["review_score"].mean(), 2))
 
 # ==============================
-# EDA VISUALIZATION
+# VISUALISASI 1
 # ==============================
-st.subheader("📊 Analisis Harga vs Review")
+st.subheader("📊 Harga vs Review")
 
 fig1, ax1 = plt.subplots()
 sns.scatterplot(data=filtered, x="price", y="review_score", ax=ax1)
@@ -73,7 +80,7 @@ ax1.set_title("Harga vs Review Score")
 st.pyplot(fig1)
 
 # ==============================
-# DISTRIBUSI REVIEW
+# VISUALISASI 2
 # ==============================
 st.subheader("⭐ Distribusi Review")
 
@@ -83,25 +90,30 @@ ax2.set_title("Distribusi Review Score")
 st.pyplot(fig2)
 
 # ==============================
-# KATEGORI TERBURUK
+# VISUALISASI 3
 # ==============================
 st.subheader("📉 Kategori dengan Review Terendah")
 
-cat_review = filtered.groupby("product_category_name")["review_score"].mean().sort_values().head(10)
+cat_review = (
+    filtered.groupby("product_category_name")["review_score"]
+    .mean()
+    .sort_values()
+    .head(10)
+)
 
-fig3, ax3 = plt.subplots(figsize=(8,5))
+fig3, ax3 = plt.subplots(figsize=(8, 5))
 cat_review.plot(kind="barh", ax=ax3)
 ax3.set_title("Top 10 Kategori Review Terendah")
 st.pyplot(fig3)
 
 # ==============================
-# INSIGHT (sesuai reviewer requirement)
+# INSIGHT
 # ==============================
 st.subheader("💡 Insight Bisnis")
 
 st.markdown("""
-- Harga memiliki pengaruh terhadap pembelian, tetapi tidak menjadi faktor utama.
-- Kepuasan pelanggan lebih dipengaruhi oleh kualitas produk dan pengalaman pengiriman.
-- Terdapat kategori produk dengan review rendah yang perlu evaluasi.
-- Segmentasi pelanggan menunjukkan adanya potensi churn yang tinggi.
+- Harga tidak selalu menentukan rating produk.
+- Review rendah mengindikasikan masalah kualitas atau pengiriman.
+- Beberapa kategori memiliki performa buruk dan perlu evaluasi.
+- Filter interaktif membantu analisis lebih spesifik per segmen.
 """)
