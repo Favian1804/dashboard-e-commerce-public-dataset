@@ -83,46 +83,6 @@ ax2.set_xlabel("Review Score")
 ax2.set_ylabel("Jumlah")
 st.pyplot(fig2)
 
-# ========================
-# RFM ANALYSIS
-# ========================
-st.subheader("👥 RFM Analysis")
-
-df['order_purchase_timestamp'] = pd.to_datetime(df['order_purchase_timestamp'])
-
-rfm = df.groupby('customer_id').agg({
-    'order_purchase_timestamp': lambda x: (df['order_purchase_timestamp'].max() - x.max()).days,
-    'order_id': 'count',
-    'price': 'sum'
-}).reset_index()
-
-rfm.columns = ['customer_id', 'Recency', 'Frequency', 'Monetary']
-
-# Scoring
-rfm['R_score'] = pd.qcut(rfm['Recency'], 4, labels=[4,3,2,1])
-rfm['F_score'] = pd.qcut(rfm['Frequency'].rank(method='first'), 4, labels=[1,2,3,4])
-rfm['M_score'] = pd.qcut(rfm['Monetary'], 4, labels=[1,2,3,4])
-
-rfm['R_score'] = rfm['R_score'].astype(int)
-rfm['F_score'] = rfm['F_score'].astype(int)
-rfm['M_score'] = rfm['M_score'].astype(int)
-
-def segment(row):
-    if row['R_score'] == 4 and row['F_score'] == 4:
-        return 'Best Customers'
-    elif row['R_score'] >= 3 and row['F_score'] >= 3:
-        return 'Loyal Customers'
-    else:
-        return 'At Risk'
-
-rfm['segment'] = rfm.apply(segment, axis=1)
-
-segment_count = rfm['segment'].value_counts()
-
-fig3, ax3 = plt.subplots()
-segment_count.plot(kind='bar', ax=ax3)
-ax3.set_ylabel("Jumlah Customer")
-st.pyplot(fig3)
 
 # ========================
 # RAW DATA
